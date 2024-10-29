@@ -1,4 +1,4 @@
-use std::cell::OnceCell;
+
 
 
 fn main(){
@@ -7,6 +7,8 @@ fn main(){
     let tokens_of_wat = wat_form.split('\n');
     let mut instrumented_wat_lines:Vec<String> = vec![];
     let mut func_index = 0;
+    let mut func_type_index = 0;
+    let mut is_first_import_stmt = true;
     for line in tokens_of_wat{
         instrumented_wat_lines.push(line.to_string());
         let section_block = line.trim();
@@ -42,7 +44,7 @@ fn main(){
             
         }else if section_block.starts_with("(table"){
             let origin_table_info = instrumented_wat_lines.pop().unwrap();
-            instrumented_wat_lines.push(format!("  (import \"instrumentation\" \"increase_call_count\" (func $inc_call_cnt (type 0)))"));
+            instrumented_wat_lines.push(format!("  (import \"instrumentation\" \"increase_call_count\" (func $inc_call_cnt (type {})))", func_type_index + 1));
             instrumented_wat_lines.push(origin_table_info);
         }else if section_block.starts_with("(local "){
             let origin_local_var_info = instrumented_wat_lines.pop().unwrap();
@@ -52,9 +54,17 @@ fn main(){
             instrumented_wat_lines.push(inst1);
             instrumented_wat_lines.push(inst2);
         }else if section_block.starts_with("(import"){
+            if is_first_import_stmt{
+                let first_import_statement = instrumented_wat_lines.pop().unwrap();
+                instrumented_wat_lines.push("(type (func (param i32)))".to_string());
+                instrumented_wat_lines.push(first_import_statement);
+                is_first_import_stmt = false;
+            }
             func_index += 1;
         }
-
+        else if section_block.starts_with("(type"){
+            func_type_index += 1;
+        }
     }   
    std::fs::write(&args[2], instrumented_wat_lines.join("\n")).unwrap();
 }

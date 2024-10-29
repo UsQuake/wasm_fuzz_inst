@@ -44,7 +44,7 @@ fn main(){
             
         }else if section_block.starts_with("(table"){
             let origin_table_info = instrumented_wat_lines.pop().unwrap();
-            instrumented_wat_lines.push(format!("  (import \"instrumentation\" \"increase_call_count\" (func $inc_call_cnt (type {})))", func_type_index + 1));
+            instrumented_wat_lines.push(format!("  (import \"instrumentation\" \"increase_call_count\" (func $inc_call_cnt (type {})))", func_type_index));
             instrumented_wat_lines.push(origin_table_info);
         }else if section_block.starts_with("(local "){
             let origin_local_var_info = instrumented_wat_lines.pop().unwrap();
@@ -56,7 +56,7 @@ fn main(){
         }else if section_block.starts_with("(import"){
             if is_first_import_stmt{
                 let first_import_statement = instrumented_wat_lines.pop().unwrap();
-                instrumented_wat_lines.push("(type (func (param i32)))".to_string());
+                instrumented_wat_lines.push("  (type (func (param i32)))".to_string());
                 instrumented_wat_lines.push(first_import_statement);
                 is_first_import_stmt = false;
             }
